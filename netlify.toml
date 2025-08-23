@@ -1,0 +1,11 @@
+[[redirects]]
+  from = "http://santiago.gallery/*"
+  to = "https://santiago.gallery/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://www.santiago.gallery/*"
+  to = "https://santiago.gallery/:splat"
+  status = 301
+  force = true
