@@ -5,11 +5,6 @@ import { Button } from './ui/button';
 import { Heart, MessageCircle, MapPin, Calendar, Loader2, ChevronDown, ChevronLeft, ChevronRight, ShoppingCart, Zap, Search } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
-// Configuración de Shopify
-const SHOPIFY_STORE = 'tndztv-yx';
-const SHOPIFY_ACCESS_TOKEN = '64aab96a1d4aaa428d04fb9d6519a916';
-const TARGET_CATEGORY = 'posters';
-
 interface Product {
   id: string;
   title: string;
@@ -46,122 +41,178 @@ interface PosterCollection {
   products: Product[];
 }
 
-// Función para obtener productos de Shopify
-async function fetchProductsFromShopify() {
-  try {
-    const query = `
-    {
-      collectionByHandle(handle: "${TARGET_CATEGORY}") {
-        title
-        products(first: 20) {
-          edges {
-            node {
-              id
-              title
-              description
-              createdAt
-              variants(first: 10) {
-                edges {
-                  node {
-                    price
-                    compareAtPrice
-                    sku
-                    inventoryQuantity
-                    availableForSale
-                  }
-                }
-              }
-              images(first: 1) {
-                edges {
-                  node {
-                    url
-                    altText
-                  }
-                }
-              }
-              tags
-              vendor
-            }
-          }
-        }
-      }
-    }
-    `;
-    
-    const response = await fetch(`https://${SHOPIFY_STORE}.myshopify.com/api/2023-04/graphql.json`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Shopify-Storefront-Access-Token': SHOPIFY_ACCESS_TOKEN
-      },
-      body: JSON.stringify({ query })
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Error HTTP: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    if (data.errors) {
-      throw new Error(data.errors[0].message);
-    }
-    
-    // Procesar los productos de Shopify
-    const products = data.data.collectionByHandle.products.edges.map((edge: any) => {
-      const product = edge.node;
-      const variant = product.variants.edges[0]?.node;
-      
-      return {
-        id: product.id,
-        title: product.title,
-        price: `$${variant?.price || '0'}`,
-        originalPrice: variant?.compareAtPrice ? `$${variant.compareAtPrice}` : undefined,
-        image: product.images.edges[0]?.node.url || 'https://via.placeholder.com/300',
-        creationDate: new Date(product.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-        location: 'New York, NY', // Valor por defecto
-        description: product.description || 'No description available',
-        materials: ['Premium Paper', 'Archival Inks'], // Valores por defecto
-        hashtags: product.tags || [],
-        sizes: ['A4 (8×12")', 'A3 (12×16")', 'A2 (16×24")'], // Valores por defecto
+const allPosters: PosterCollection[] = [
+  {
+    id: '1',
+    title: 'Abstract Harmony Collection',
+    designer: 'Santiago Camiro',
+    description: 'A vibrant exploration of color and form, this collection embodies the essence of contemporary abstract design.',
+    mainImage: 'https://stuffs.nyc/wp-content/uploads/IMG_6131-scaled.jpg',
+    price: '$45',
+    technique: 'Digital Print on Premium Paper',
+    dimensions: '18" x 12"',
+    year: '2024',
+    series: 'Abstract Collection',
+    likes: 189,
+    comments: 34,
+    tags: ['abstract', 'geometric', 'contemporary'],
+    products: [
+      {
+        id: 'p1-1',
+        title: 'Abstract Harmony Print',
+        price: '$45',
+        originalPrice: '$65',
+        image: 'https://stuffs.nyc/wp-content/uploads/IMG_6131-scaled.jpg',
+        creationDate: 'March 2024',
+        location: 'New York, NY',
+        description: 'A stunning abstract composition featuring bold geometric patterns that intersect with organic shapes to create visual rhythm and movement.',
+        materials: ['Premium Cotton Paper', 'Archival Inks', 'UV Protective Coating'],
+        hashtags: ['abstract', 'geometric', 'modern', 'artwork'],
+        sizes: ['A4 (8×12")', 'A3 (12×16")', 'A2 (16×24")'],
         variations: [
           { name: 'Frame', options: ['Black Frame', 'White Frame', 'Natural Wood', 'No Frame'] },
           { name: 'Finish', options: ['Matte', 'Glossy', 'Satin'] }
         ],
-        stockNumber: variant?.sku || 'N/A',
-        stockQuantity: variant?.inventoryQuantity || 0,
-        inStock: variant?.availableForSale || false
-      };
-    });
-    
-    return products;
-  } catch (error) {
-    console.error('Error fetching products from Shopify:', error);
-    return [];
+        stockNumber: 'AH-001',
+        stockQuantity: 24,
+        inStock: true,
+        badge: 'Best Seller'
+      },
+      {
+        id: 'p1-2',
+        title: 'Geometric Rhythms',
+        price: '$38',
+        image: 'https://stuffs.nyc/wp-content/uploads/20250815_131722_bded153f-scaled.jpg',
+        creationDate: 'February 2024',
+        location: 'Brooklyn, NY',
+        description: 'Exploring the intersection of geometry and organic forms through vibrant color palettes and dynamic compositions.',
+        materials: ['Fine Art Paper', 'Giclée Print', 'Museum Quality'],
+        hashtags: ['geometric', 'vibrant', 'rhythm', 'design'],
+        sizes: ['A4 (8×12")', 'A3 (12×16")', 'A1 (24×32")'],
+        variations: [
+          { name: 'Frame', options: ['Black Frame', 'White Frame', 'No Frame'] },
+          { name: 'Edition', options: ['Standard', 'Artist Signed'] }
+        ],
+        stockNumber: 'GR-002',
+        stockQuantity: 18,
+        inStock: true
+      },
+      {
+        id: 'p1-3',
+        title: 'Color Flow Study',
+        price: '$52',
+        image: 'https://stuffs.nyc/wp-content/uploads/IMG_5965-scaled.jpg',
+        creationDate: 'April 2024',
+        location: 'Manhattan, NY',
+        description: 'A mesmerizing study of color transitions and flow patterns that captures the essence of contemporary abstract expression.',
+        materials: ['Canvas Print', 'Acrylic Finish', 'Gallery Wrapped'],
+        hashtags: ['colorful', 'flow', 'study', 'contemporary'],
+        sizes: ['A3 (12×16")', 'A2 (16×24")', 'A1 (24×32")'],
+        variations: [
+          { name: 'Mount', options: ['Canvas Stretch', 'Gallery Wrap', 'Float Mount'] },
+          { name: 'Finish', options: ['Matte', 'Semi-Gloss'] }
+        ],
+        stockNumber: 'CFS-003',
+        stockQuantity: 12,
+        inStock: true,
+        badge: 'Limited Edition'
+      }
+    ]
+  },
+  {
+    id: '2',
+    title: 'Urban Composition Series',
+    designer: 'Santiago Camiro',
+    description: 'Dynamic patterns that pulse with the energy of city life.',
+    mainImage: 'https://stuffs.nyc/wp-content/uploads/20250815_131722_bded153f-scaled.jpg',
+    price: '$38',
+    technique: 'Screen Print on Cotton Paper',
+    dimensions: '24" x 16"',
+    year: '2024',
+    series: 'Urban Series',
+    likes: 156,
+    comments: 28,
+    tags: ['urban', 'modern', 'architectural'],
+    products: [
+      {
+        id: 'p2-1',
+        title: 'City Pulse',
+        price: '$38',
+        image: 'https://stuffs.nyc/wp-content/uploads/20250815_131722_bded153f-scaled.jpg',
+        creationDate: 'June 2024',
+        location: 'Manhattan, NY',
+        description: 'Capturing the rhythmic pulse of urban life through dynamic visual patterns and energetic compositions.',
+        materials: ['Cotton Paper', 'Screen Print', 'Water-based Inks'],
+        hashtags: ['urban', 'pulse', 'energy', 'dynamic'],
+        sizes: ['A4 (8×12")', 'A3 (12×16")'],
+        variations: [
+          { name: 'Color Scheme', options: ['Original', 'Black & White', 'Sepia'] },
+          { name: 'Frame', options: ['Black Frame', 'Silver Frame', 'No Frame'] }
+        ],
+        stockNumber: 'CP-004',
+        stockQuantity: 31,
+        inStock: true,
+        badge: 'New'
+      },
+      {
+        id: 'p2-2',
+        title: 'Metropolitan Grid',
+        price: '$44',
+        image: 'https://stuffs.nyc/wp-content/uploads/20250815_132924_ce9c800c-scaled.jpg',
+        creationDate: 'July 2024',
+        location: 'Brooklyn, NY',
+        description: 'An architectural interpretation of city grids and urban planning through modern artistic expression.',
+        materials: ['Recycled Paper', 'Digital Print', 'Matte Finish'],
+        hashtags: ['metropolitan', 'grid', 'architecture', 'planning'],
+        sizes: ['A3 (12×16")', 'A2 (16×24")'],
+        variations: [
+          { name: 'Paper', options: ['Recycled White', 'Recycled Cream', 'Standard White'] },
+          { name: 'Frame', options: ['Bamboo Frame', 'Metal Frame', 'No Frame'] }
+        ],
+        stockNumber: 'MG-005',
+        stockQuantity: 22,
+        inStock: true
+      }
+    ]
+  },
+  {
+    id: '3',
+    title: 'Color Symphony Collection',
+    designer: 'Santiago Camiro',
+    description: 'A harmonious blend of vibrant colors and flowing forms.',
+    mainImage: 'https://stuffs.nyc/wp-content/uploads/IMG_5965-scaled.jpg',
+    price: '$42',
+    technique: 'Eco-Friendly Soy Ink Print',
+    dimensions: '20" x 13.3"',
+    year: '2024',
+    series: 'Color Collection',
+    likes: 234,
+    comments: 45,
+    tags: ['colorful', 'vibrant', 'expressive'],
+    products: [
+      {
+        id: 'p3-1',
+        title: 'Vibrant Flow',
+        price: '$42',
+        image: 'https://stuffs.nyc/wp-content/uploads/IMG_5965-scaled.jpg',
+        creationDate: 'March 2024',
+        location: 'Chelsea, NY',
+        description: 'A celebration of color in motion, where vibrant hues flow and dance across the canvas in perfect harmony.',
+        materials: ['Eco Paper', 'Soy-based Inks', 'Biodegradable Finish'],
+        hashtags: ['vibrant', 'flow', 'color', 'harmony'],
+        sizes: ['A4 (8×12")', 'A3 (12×16")', 'A2 (16×24")'],
+        variations: [
+          { name: 'Eco-Level', options: ['Standard Eco', 'Premium Eco', 'Carbon Neutral'] },
+          { name: 'Frame', options: ['Sustainable Wood', 'Recycled Metal', 'No Frame'] }
+        ],
+        stockNumber: 'VF-006',
+        stockQuantity: 15,
+        inStock: true,
+        badge: 'Eco-Friendly'
+      }
+    ]
   }
-}
-
-// Función para agrupar productos por colección
-function groupProductsIntoCollections(products: Product[]): PosterCollection[] {
-  // Aquí puedes implementar tu lógica para agrupar productos
-  // Por ahora, simplemente creamos una colección por producto
-  return products.map((product, index) => ({
-    id: `collection-${index}`,
-    title: product.title,
-    designer: 'Santiago Camiro', // Valor por defecto
-    description: product.description,
-    mainImage: product.image,
-    price: product.price,
-    technique: 'Digital Print', // Valor por defecto
-    dimensions: '18" x 12"', // Valor por defecto
-    year: new Date().getFullYear().toString(),
-    series: 'Abstract Collection', // Valor por defecto
-    likes: Math.floor(Math.random() * 100),
-    comments: Math.floor(Math.random() * 30),
-    tags: product.hashtags,
-    products: [product] // Cada colección tiene solo su producto principal
-  }));
-}
+];
 
 const INITIAL_LOAD = 6;
 const LOAD_MORE = 4;
@@ -744,33 +795,10 @@ function PosterItem({ poster, isNew = false, onLike, isLiked }: {
 }
 
 export function ArtGallery() {
-  const [displayedPosters, setDisplayedPosters] = useState<PosterCollection[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [hasMore, setHasMore] = useState(false);
+  const [displayedPosters, setDisplayedPosters] = useState<PosterCollection[]>(allPosters.slice(0, INITIAL_LOAD));
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(allPosters.length > INITIAL_LOAD);
   const [likedPosters, setLikedPosters] = useState<Set<string>>(new Set());
-
-  // Cargar productos de Shopify al montar el componente
-  useEffect(() => {
-    async function loadShopifyProducts() {
-      setLoading(true);
-      try {
-        const products = await fetchProductsFromShopify();
-        const collections = groupProductsIntoCollections(products);
-        
-        setDisplayedPosters(collections.slice(0, INITIAL_LOAD));
-        setHasMore(collections.length > INITIAL_LOAD);
-      } catch (error) {
-        console.error('Error loading Shopify products:', error);
-        // En caso de error, usar datos de ejemplo
-        setDisplayedPosters(allPosters.slice(0, INITIAL_LOAD));
-        setHasMore(allPosters.length > INITIAL_LOAD);
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    loadShopifyProducts();
-  }, []);
 
   const loadMorePosters = useCallback(() => {
     if (loading || !hasMore) return;
@@ -811,17 +839,6 @@ export function ArtGallery() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [loadMorePosters]);
-
-  if (loading && displayedPosters.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex items-center gap-3 text-muted-foreground">
-          <Loader2 className="w-5 h-5 animate-spin" />
-          <span className="text-sm">Loading posters from Shopify...</span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen p-4 sm:p-6 lg:p-8">
@@ -873,8 +890,3 @@ export function ArtGallery() {
     </div>
   );
 }
-
-// Datos de ejemplo para respaldo
-const allPosters: PosterCollection[] = [
-  // ... (mantener tus datos de ejemplo existentes como respaldo)
-];
